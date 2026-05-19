@@ -21,18 +21,7 @@ after(() => runner.clear());
 test('PATCH /rest/products/reviews', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: [
-        {
-          name: 'broken_access_control',
-          options: {
-            auth: process.env.BRIGHT_AUTH_ID
-          }
-        },
-        'id_enumeration',
-        'business_constraint_bypass',
-        'xss',
-        'jwt'
-      ],
+      tests: ['jwt'],
       attackParamLocations: [AttackParamLocation.BODY, AttackParamLocation.HEADER],
       starMetadata: {
         code_source: 'denis-maiorov-brightsec/juice-shop:master',

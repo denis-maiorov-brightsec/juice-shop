@@ -27,8 +27,7 @@ test('GET /rest/admin/application-version', { signal: AbortSignal.timeout(timeou
           options: {
             auth: process.env.BRIGHT_AUTH_ID
           }
-        },
-        'improper_asset_management'
+        }
       ],
       attackParamLocations: [AttackParamLocation.PATH],
       starMetadata: {

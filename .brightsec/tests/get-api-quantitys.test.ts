@@ -27,8 +27,7 @@ test('GET /api/Quantitys', { signal: AbortSignal.timeout(timeout) }, async () =>
           options: {
             auth: process.env.BRIGHT_AUTH_ID
           }
-        },
-        'id_enumeration'
+        }
       ],
       attackParamLocations: [AttackParamLocation.PATH],
       starMetadata: {

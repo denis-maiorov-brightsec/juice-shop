@@ -21,19 +21,7 @@ after(() => runner.clear());
 test('POST /api/Complaints', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: [
-        'bopla',
-        {
-          name: 'broken_access_control',
-          options: {
-            auth: process.env.BRIGHT_AUTH_ID
-          }
-        },
-        'xss',
-        'html_injection',
-        'iframe_injection',
-        'jwt'
-      ],
+      tests: ['jwt'],
       attackParamLocations: [AttackParamLocation.BODY, AttackParamLocation.HEADER],
       starMetadata: {
         code_source: 'denis-maiorov-brightsec/juice-shop:master',

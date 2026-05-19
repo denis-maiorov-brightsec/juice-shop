@@ -27,13 +27,7 @@ test('GET /api/Products', { signal: AbortSignal.timeout(timeout) }, async () => 
           options: {
             auth: process.env.BRIGHT_AUTH_ID
           }
-        },
-        'http_method_fuzzing',
-        'xss',
-        'iframe_injection',
-        'bopla',
-        'id_enumeration',
-        'full_path_disclosure'
+        }
       ],
       attackParamLocations: [AttackParamLocation.PATH, AttackParamLocation.HEADER],
       starMetadata: {

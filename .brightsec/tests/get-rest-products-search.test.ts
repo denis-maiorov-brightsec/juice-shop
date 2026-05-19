@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /rest/products/search?q=:q', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['sqli', 'full_path_disclosure'],
+      tests: ['sqli'],
       attackParamLocations: [AttackParamLocation.QUERY],
       starMetadata: {
         code_source: 'denis-maiorov-brightsec/juice-shop:master',

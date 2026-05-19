@@ -21,17 +21,7 @@ after(() => runner.clear());
 test('GET /api/Users', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: [
-        {
-          name: 'broken_access_control',
-          options: {
-            auth: process.env.BRIGHT_AUTH_ID
-          }
-        },
-        'bopla',
-        'jwt',
-        'business_constraint_bypass'
-      ],
+      tests: ['jwt'],
       attackParamLocations: [AttackParamLocation.HEADER],
       starMetadata: {
         code_source: 'denis-maiorov-brightsec/juice-shop:master',

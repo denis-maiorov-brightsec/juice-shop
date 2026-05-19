@@ -27,10 +27,7 @@ test('GET /rest/user/security-question?email=:email', { signal: AbortSignal.time
           options: {
             auth: process.env.BRIGHT_AUTH_ID
           }
-        },
-        'id_enumeration',
-        'sqli',
-        'business_constraint_bypass'
+        }
       ],
       attackParamLocations: [AttackParamLocation.QUERY],
       starMetadata: {

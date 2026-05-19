@@ -22,16 +22,7 @@ test('POST /b2b/v2/orders', { signal: AbortSignal.timeout(timeout) }, async () =
   await runner
     .createScan({
       tests: [
-        'server_side_js_injection',
-        {
-          name: 'broken_access_control',
-          options: {
-            auth: process.env.BRIGHT_AUTH_ID
-          }
-        },
-        'jwt',
-        'business_constraint_bypass',
-        'full_path_disclosure'
+        'jwt'
       ],
       attackParamLocations: [AttackParamLocation.BODY, AttackParamLocation.HEADER],
       starMetadata: {

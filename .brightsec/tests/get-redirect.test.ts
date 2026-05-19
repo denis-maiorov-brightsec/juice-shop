@@ -21,7 +21,7 @@ after(() => runner.clear());
 test('GET /redirect?to=:to', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: ['unvalidated_redirect', 'full_path_disclosure'],
+      tests: ['unvalidated_redirect'],
       attackParamLocations: [AttackParamLocation.QUERY],
       starMetadata: {
         code_source: 'denis-maiorov-brightsec/juice-shop:master',

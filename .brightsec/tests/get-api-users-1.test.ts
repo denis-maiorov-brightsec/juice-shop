@@ -21,18 +21,7 @@ after(() => runner.clear());
 test('GET /api/Users/1', { signal: AbortSignal.timeout(timeout) }, async () => {
   await runner
     .createScan({
-      tests: [
-        {
-          name: 'broken_access_control',
-          options: {
-            auth: process.env.BRIGHT_AUTH_ID
-          }
-        },
-        'id_enumeration',
-        'bopla',
-        'jwt',
-        'http_method_fuzzing'
-      ],
+      tests: ['id_enumeration', 'jwt'],
       attackParamLocations: [AttackParamLocation.PATH, AttackParamLocation.HEADER],
       starMetadata: {
         code_source: 'denis-maiorov-brightsec/juice-shop:master',

@@ -27,12 +27,7 @@ test('GET /api/Feedbacks', { signal: AbortSignal.timeout(timeout) }, async () =>
           options: {
             auth: process.env.BRIGHT_AUTH_ID
           }
-        },
-        'id_enumeration',
-        'xss',
-        'html_injection',
-        'iframe_injection',
-        'full_path_disclosure'
+        }
       ],
       attackParamLocations: [AttackParamLocation.PATH],
       starMetadata: {

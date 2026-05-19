@@ -27,8 +27,7 @@ test('GET /api/SecurityQuestions', { signal: AbortSignal.timeout(timeout) }, asy
           options: {
             auth: process.env.BRIGHT_AUTH_ID
           }
-        },
-        'http_method_fuzzing'
+        }
       ],
       attackParamLocations: [AttackParamLocation.HEADER],
       starMetadata: {

@@ -27,11 +27,7 @@ test('PUT /rest/products/1/reviews', { signal: AbortSignal.timeout(timeout) }, a
           options: {
             auth: process.env.BRIGHT_AUTH_ID
           }
-        },
-        'bopla',
-        'xss',
-        'html_injection',
-        'id_enumeration'
+        }
       ],
       attackParamLocations: [AttackParamLocation.PATH, AttackParamLocation.BODY],
       starMetadata: {

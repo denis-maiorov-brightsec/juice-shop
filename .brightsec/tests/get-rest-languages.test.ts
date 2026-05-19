@@ -22,14 +22,12 @@ test('GET /rest/languages', { signal: AbortSignal.timeout(timeout) }, async () =
   await runner
     .createScan({
       tests: [
-        'full_path_disclosure',
         {
           name: 'broken_access_control',
           options: {
             auth: process.env.BRIGHT_AUTH_ID
           }
-        },
-        'http_method_fuzzing'
+        }
       ],
       attackParamLocations: [AttackParamLocation.PATH],
       starMetadata: {

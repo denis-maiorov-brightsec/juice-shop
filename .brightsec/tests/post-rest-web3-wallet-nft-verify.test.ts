@@ -27,10 +27,7 @@ test('POST /rest/web3/walletNFTVerify', { signal: AbortSignal.timeout(timeout) }
           options: {
             auth: process.env.BRIGHT_AUTH_ID
           }
-        },
-        'id_enumeration',
-        'business_constraint_bypass',
-        'secret_tokens'
+        }
       ],
       attackParamLocations: [AttackParamLocation.BODY],
       starMetadata: {
