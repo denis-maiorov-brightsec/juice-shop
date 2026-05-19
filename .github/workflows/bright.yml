@@ -1,0 +1,56 @@
+name: Bright
+
+on:
+  pull_request:
+    branches:
+      - "**"
+
+permissions:
+  checks: write
+  contents: read
+  id-token: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      BRIGHT_TOKEN: ${{ secrets.BRIGHT_TOKEN }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+
+      - run: |
+          if [ -f .env.example ] && [ ! -f .env ]; then
+            cp .env.example .env
+          fi
+
+      - run: |
+          docker build -t juice-shop . && docker run -p 3000:3000 juice-shop &
+
+      - name: Probe application readiness
+        run: |
+          i=1; while [ "$i" -le 30 ]; do curl -sS -o /dev/null http://127.0.0.1:3000 && exit 0; sleep 5; i=$((i + 1)); done; exit 1
+
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af #v4.1.0
+        with:
+          node-version: 22.x
+
+      - run: |
+          mkdir -p .brightsec
+          npm i --save=false --prefix .brightsec @sectester/core@0.50.0 @sectester/repeater@0.50.0 @sectester/scan@0.50.0 @sectester/runner@0.50.0 @sectester/reporter@0.50.0
+
+      - uses: ./.github/workflows/composite/configure-bright-credentials
+        with:
+          BRIGHT_HOSTNAME: development.playground.brightsec.com
+          BRIGHT_PROJECT_ID: qw61Q9wxthdLBJHE1BZVJk
+          BRIGHT_TOKEN: ${{ secrets.BRIGHT_TOKEN }}
+
+      - run: |
+          node --experimental-transform-types --experimental-strip-types --experimental-detect-module --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --test-force-exit --test-concurrency=4 --test .brightsec/tests/*.test.ts
+        env:
+          BRIGHT_HOSTNAME: development.playground.brightsec.com
+          BRIGHT_PROJECT_ID: qw61Q9wxthdLBJHE1BZVJk
+          BRIGHT_AUTH_ID: twaKgdfmYzfPkugdxWPaqW
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRIGHT_TOKEN: ${{ env.BRIGHT_TOKEN }}
+          BRIGHT_TARGET_URL: http://127.0.0.1:3000
+          SECTESTER_SCAN_POOL_SIZE: ${{ vars.SECTESTER_SCAN_POOL_SIZE }}
