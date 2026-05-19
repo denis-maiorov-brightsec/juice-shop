@@ -1,0 +1,47 @@
+import { test, before, after } from 'node:test';
+import { SecRunner } from '@sectester/runner';
+import { AttackParamLocation, HttpMethod } from '@sectester/scan';
+
+const timeout = 40 * 60 * 1000;
+const baseUrl = process.env.BRIGHT_TARGET_URL!;
+
+let runner!: SecRunner;
+
+before(async () => {
+  runner = new SecRunner({
+    hostname: process.env.BRIGHT_HOSTNAME!,
+    projectId: process.env.BRIGHT_PROJECT_ID!
+  });
+
+  await runner.init();
+});
+
+after(() => runner.clear());
+
+test('POST /profile', { signal: AbortSignal.timeout(timeout) }, async () => {
+  await runner
+    .createScan({
+      tests: ['csrf', 'xss', 'server_side_js_injection'],
+      attackParamLocations: [AttackParamLocation.BODY],
+      starMetadata: {
+        code_source: 'denis-maiorov-brightsec/juice-shop:master',
+        databases: ['SQLite', 'MarsDB'],
+        user_roles: ['customer', 'deluxe', 'accounting', 'admin']
+      },
+      poolSize: +process.env.SECTESTER_SCAN_POOL_SIZE || undefined
+    })
+    .setFailFast(false)
+    .timeout(timeout)
+    .run({
+      method: HttpMethod.POST,
+      url: `${baseUrl}/profile`,
+      body: {
+        username: 'bender'
+      },
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: 'token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoxLCJlbWFpbCI6ImFteUBqdWljZS1zaC5vcCJ9fQ.signature'
+      },
+      auth: process.env.BRIGHT_AUTH_ID
+    });
+});
