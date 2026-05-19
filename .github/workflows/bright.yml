@@ -24,7 +24,8 @@ jobs:
           fi
 
       - run: |
-          docker build -t juice-shop . && docker run -p 3000:3000 juice-shop &
+          docker build -t juice-shop .
+          docker run -d --name juice-shop -p 3000:3000 juice-shop
 
       - name: Probe application readiness
         run: |
