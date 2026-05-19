@@ -51,10 +51,49 @@ export const cutOffPoisonNullByte = (str: string) => {
   return str
 }
 
-export const isAuthorized = () => expressJwt(({ secret: publicKey }) as any)
+export const isAuthorized = () => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const token = utils.jwtFrom(req) ?? req.cookies?.token
+
+    if (!token) {
+      res.status(401).json({ error: 'Unauthorized' })
+      return
+    }
+
+    try {
+      const decoded = jwt.decode(token, { complete: true })
+      const tokenParts = token.split('.')
+      if (
+        typeof decoded === 'string' ||
+        decoded === null ||
+        typeof decoded.header?.alg !== 'string' ||
+        decoded.header.alg.toUpperCase() !== 'RS256' ||
+        tokenParts.length !== 3 ||
+        tokenParts[2] === ''
+      ) {
+        throw new Error('Invalid token algorithm')
+      }
+
+      jwt.verify(token, publicKey, { algorithms: ['RS256'] })
+      next()
+    } catch {
+      res.status(401).json({ error: 'Unauthorized' })
+    }
+  }
+}
 export const denyAll = () => expressJwt({ secret: '' + Math.random() } as any)
 export const authorize = (user = {}) => jwt.sign(user, privateKey, { expiresIn: '6h', algorithm: 'RS256' })
-export const verify = (token: string) => token ? (jws.verify as ((token: string, secret: string) => boolean))(token, publicKey) : false
+export const verify = (token: string) => {
+  if (!token) {
+    return false
+  }
+  try {
+    jwt.verify(token, publicKey, { algorithms: ['RS256'] })
+    return true
+  } catch {
+    return false
+  }
+}
 export const decode = (token: string) => { return jws.decode(token)?.payload }
 
 export const sanitizeHtml = (html: string) => sanitizeHtmlLib(html)
@@ -133,11 +172,25 @@ export const redirectAllowlist = new Set([
 ])
 
 export const isRedirectAllowed = (url: string) => {
-  let allowed = false
-  for (const allowedUrl of redirectAllowlist) {
-    allowed = allowed || url.includes(allowedUrl) // vuln-code-snippet vuln-line redirectChallenge
+  try {
+    const targetUrl = new URL(url)
+    const targetPath = targetUrl.pathname.replace(/\/+$/, '') || '/'
+
+    for (const allowedUrl of redirectAllowlist) {
+      const allowedTargetUrl = new URL(allowedUrl)
+      const allowedPath = allowedTargetUrl.pathname.replace(/\/+$/, '') || '/'
+
+      if (targetUrl.protocol === allowedTargetUrl.protocol &&
+          targetUrl.host === allowedTargetUrl.host &&
+          targetPath === allowedPath) {
+        return true
+      }
+    }
+  } catch {
+    return false
   }
-  return allowed
+
+  return false
 }
 // vuln-code-snippet end redirectCryptoCurrencyChallenge redirectChallenge
 
@@ -188,8 +241,8 @@ export const appendUserId = () => {
 export const updateAuthenticatedUsers = () => (req: Request, res: Response, next: NextFunction) => {
   const token = req.cookies.token || utils.jwtFrom(req)
   if (token) {
-    jwt.verify(token, publicKey, (err: Error | null, decoded: any) => {
-      if (err === null) {
+    jwt.verify(token, publicKey, { algorithms: ['RS256'] }, (err: Error | null, decoded: any) => {
+      if (err === null && decoded?.data?.id != null) {
         if (authenticatedUsers.get(token) === undefined) {
           authenticatedUsers.put(token, decoded)
           res.cookie('token', token)

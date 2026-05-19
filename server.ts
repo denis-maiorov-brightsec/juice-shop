@@ -370,15 +370,26 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   /* BasketItems: API only accessible for authenticated users */
   app.use('/api/BasketItems', security.isAuthorized())
   app.use('/api/BasketItems/:id', security.isAuthorized())
-  /* Feedbacks: GET allowed for feedback carousel, POST allowed in order to provide feedback without being logged in */
+  /* Feedbacks: GET /:id and GET list require authentication, POST is allowed in order to provide feedback without being logged in */
+  app.get('/api/Feedbacks', security.isAuthorized())
   app.use('/api/Feedbacks/:id', security.isAuthorized())
   /* Users: Only POST is allowed in order to register a new user */
   app.get('/api/Users', security.isAuthorized())
   app.route('/api/Users/:id')
-    .get(security.isAuthorized())
+    .get(security.isAuthorized(), (req: Request, res: Response, next: NextFunction) => {
+      const token = utils.jwtFrom(req)
+      const decodedToken = security.verify(token) && security.decode(token)
+      if (decodedToken?.data?.role === security.roles.admin || `${decodedToken?.data?.id}` === `${req.params.id}`) {
+        next()
+      } else {
+        res.status(403).json({ error: 'Malicious activity detected' })
+      }
+    })
     .put(security.denyAll())
     .delete(security.denyAll())
   /* Products: Only GET is allowed in order to view products */ // vuln-code-snippet neutral-line changeProductChallenge
+  app.get('/api/Products', security.isAuthorized())
+  app.get('/api/Products/:id', security.isAuthorized())
   app.post('/api/Products', security.isAuthorized()) // vuln-code-snippet neutral-line changeProductChallenge
   // app.put('/api/Products/:id', security.isAuthorized()) // vuln-code-snippet vuln-line changeProductChallenge
   app.delete('/api/Products/:id', security.denyAll())
@@ -396,7 +407,8 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.get('/api/Recycles/:id', recycles.getRecycleItem())
   app.put('/api/Recycles/:id', security.denyAll())
   app.delete('/api/Recycles/:id', security.denyAll())
-  /* SecurityQuestions: Only GET list of questions allowed. */
+  /* SecurityQuestions: Only GET list of questions allowed for authenticated users. */
+  app.get('/api/SecurityQuestions', security.isAuthorized())
   app.post('/api/SecurityQuestions', security.denyAll())
   app.use('/api/SecurityQuestions/:id', security.denyAll())
   /* SecurityAnswers: Only POST of answer allowed. */
@@ -436,7 +448,7 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   /* Accounting users are allowed to check and update quantities */
   app.delete('/api/Quantitys/:id', security.denyAll())
   app.post('/api/Quantitys', security.denyAll())
-  app.use('/api/Quantitys/:id', security.isAccounting(), IpFilter(['123.456.789'], { mode: 'allow' }))
+  app.use('/api/Quantitys', security.isAccounting(), IpFilter(['123.456.789'], { mode: 'allow' }))
   /* Feedbacks: Do not allow changes of existing feedback */
   app.put('/api/Feedbacks/:id', security.denyAll())
   /* PrivacyRequests: Only allowed for authenticated users */
@@ -455,7 +467,7 @@ restoreOverwrittenFilesWithOriginals().then(() => {
 
   app.post('/api/Addresss', security.appendUserId())
   app.get('/api/Addresss', security.appendUserId(), address.getAddress())
-  app.put('/api/Addresss/:id', security.appendUserId())
+  app.put('/api/Addresss/:id', security.appendUserId(), address.updateAddressById())
   app.delete('/api/Addresss/:id', security.appendUserId(), address.delAddressById())
   app.get('/api/Addresss/:id', security.appendUserId(), address.getAddressById())
   app.get('/api/Deliverys', delivery.getDeliveryMethods())
@@ -601,7 +613,15 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.get('/rest/basket/:id', retrieveBasket())
   app.post('/rest/basket/:id/checkout', placeOrder())
   app.put('/rest/basket/:id/coupon/:coupon', applyCoupon())
-  app.get('/rest/admin/application-version', retrieveAppVersion())
+  app.get('/rest/admin/application-version', security.isAuthorized(), (req: Request, res: Response, next: NextFunction) => {
+    const token = utils.jwtFrom(req)
+    const decodedToken = security.verify(token) && security.decode(token)
+    if (decodedToken?.data?.role === security.roles.admin) {
+      next()
+    } else {
+      res.status(403).json({ error: 'Malicious activity detected' })
+    }
+  }, retrieveAppVersion())
   app.get('/rest/admin/application-configuration', retrieveAppConfiguration())
   app.get('/rest/repeat-notification', repeatNotification())
   app.get('/rest/continue-code', continueCode())
@@ -617,7 +637,7 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.get('/rest/saveLoginIp', saveLoginIp())
   app.post('/rest/user/data-export', security.appendUserId(), verifyImageCaptcha())
   app.post('/rest/user/data-export', security.appendUserId(), dataExport())
-  app.get('/rest/languages', getLanguageList())
+  app.get('/rest/languages', security.isAuthorized(), getLanguageList())
   app.get('/rest/order-history', orderHistory())
   app.get('/rest/order-history/orders', security.isAccounting(), allOrders())
   app.put('/rest/order-history/:id/delivery-status', security.isAccounting(), toggleDeliveryStatus())
@@ -638,8 +658,8 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.post('/rest/web3/submitKey', checkKeys())
   app.get('/rest/web3/nftUnlocked', nftUnlocked())
   app.get('/rest/web3/nftMintListen', nftMintListener())
-  app.post('/rest/web3/walletNFTVerify', walletNFTVerify())
-  app.post('/rest/web3/walletExploitAddress', contractExploitListener())
+  app.post('/rest/web3/walletNFTVerify', security.isAuthorized(), walletNFTVerify())
+  app.post('/rest/web3/walletExploitAddress', security.isAuthorized(), contractExploitListener())
 
   /* B2B Order API */
   app.post('/b2b/v2/orders', b2bOrder())

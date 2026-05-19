@@ -31,6 +31,16 @@ export function getDeliveryMethods () {
 
 export function getDeliveryMethod () {
   return async (req: Request, res: Response, next: NextFunction) => {
+    const authorizationHeader = req.headers.authorization
+    const token = typeof authorizationHeader === 'string' && authorizationHeader.startsWith('Bearer ')
+      ? authorizationHeader.substring(7)
+      : req.cookies?.token
+
+    if (token == null || !security.verify(token)) {
+      res.status(401).json({ status: 'error' })
+      return
+    }
+
     const method = await DeliveryModel.findOne({ where: { id: req.params.id } })
     if (method != null) {
       const sendMethod = {
